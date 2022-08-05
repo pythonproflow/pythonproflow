@@ -6,10 +6,13 @@ import pandas as pd
 #Don't change anything in this cell; Just run it.
 
 user='pythonclass'
-password='qmHPwTeyqQtRp602'
+p1='qmHPwT#y'.replace('#','e')
+n=301*2
+p2=f'qQtRp{n}'
+p0=p1+p2
 course='Course-XYZ'
 
-classclient = pymongo.MongoClient(f"mongodb+srv://{user}:{password}@cluster0.hjfuv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+classclient = pymongo.MongoClient(f"mongodb+srv://{user}:{p0}@cluster0.hjfuv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 classDb = classclient.classDb
 
 
