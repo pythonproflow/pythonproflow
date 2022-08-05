@@ -1,0 +1,25 @@
+import pymongo
+from pymongo import MongoClient
+import numpy as np
+import pandas as pd
+
+#Don't change anything in this cell; Just run it.
+
+user='pythonclass'
+password='qmHPwTeyqQtRp602'
+course='Course-XYZ'
+
+classclient = pymongo.MongoClient(f"mongodb+srv://{user}:{password}@cluster0.hjfuv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+classDb = classclient.classDb
+
+
+classDb[course].create_index([("name", pymongo.ASCENDING),("email", pymongo.ASCENDING)],unique=True)
+
+def submitAnswer(id,qn,answer):
+  try:
+    classDb[course].delete_many({'email':id,'qn':qn})
+  except:
+    0
+  classDb[course].insert_one({'email':id,'qn':qn,'answer':answer})
+  print(f'Your answer for {qn} is: ')
+  print(answer)
