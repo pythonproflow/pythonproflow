@@ -17,7 +17,7 @@ password3='tropical'
 password4='fantasy'
 password5='document'
 
-
+import time
 
 
 classclient = pymongo.MongoClient(f"mongodb+srv://{user}:{p0}@cluster0.hjfuv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
@@ -50,4 +50,5 @@ def check_password(user, guess):
     for i in range(len(actual)):
         if guess[i] != actual[i]:
             return False
+        time.sleep(0.00001)
     return True
