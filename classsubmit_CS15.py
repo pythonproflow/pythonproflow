@@ -40,3 +40,14 @@ def reviewAnswers(id,module):
   return pd.DataFrame(classDb[course].find({'email':id,'qn':{'$regex':f'^{module}'}}))
 
 
+# Using this check_password, you should be able
+# to crack the full password.
+def check_password(user, guess):
+    actual = password1
+    if len(guess) != len(actual):
+        return False
+
+    for i in range(len(actual)):
+        if guess[i] != actual[i]:
+            return False
+    return True
