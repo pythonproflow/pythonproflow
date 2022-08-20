@@ -11,6 +11,14 @@ n=301*2
 p2=f'qQtRp{n}'
 p0=p1+p2
 course='Course-CS15'
+password1='discover'
+password2='world'
+password3='tropical'
+password4='fantasy'
+password5='document'
+
+
+
 
 classclient = pymongo.MongoClient(f"mongodb+srv://{user}:{p0}@cluster0.hjfuv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 classDb = classclient.classDb
@@ -30,3 +38,5 @@ def submitAnswer(id,qn,answer):
 
 def reviewAnswers(id,module):
   return pd.DataFrame(classDb[course].find({'email':id,'qn':{'$regex':f'^{module}'}}))
+
+
