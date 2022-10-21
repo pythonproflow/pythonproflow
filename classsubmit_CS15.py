@@ -126,7 +126,7 @@ def profX(board,mysymbol):
   return randomBot1(board,mysymbol)
 
 def dumbledore(board,mysymbol): 
-
+  n=len(board)
   score=[[0]*n for j in range(n)]
   for i in range(n):
     for j in range(n):
@@ -175,7 +175,7 @@ def dumbledore(board,mysymbol):
   return random.choice(choices)
 
 def phoenix(board,mysymbol): 
-
+  n=len(board)
   score=[[0]*n for j in range(n)]
   for i in range(n):
     for j in range(n):
