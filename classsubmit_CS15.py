@@ -231,3 +231,95 @@ def boxsu(board,mysymbol):
         possibles.append((i,j))
 
   return random.choice(possibles)
+
+def voldemort(board,mysymbol): 
+  n=len(board)
+  score=[[0]*n for j in range(n)]
+  m0=-0.3
+  m1=0.1
+  hi=3.0
+
+  if n>6:
+    m0=-0.2
+    m1=+0.1
+    hi=3.0
+
+  #8x8 or higher, use dumbledore
+  if n>8:
+    m0=+0.2 #inverted
+    m1=+0.1
+    hi=9.0
+
+
+  for i in range(n):
+    for j in range(n):
+      score[i][j]=hi/max(abs(n/2-i-0.5)*abs(n/2-j-0.5),1)
+      if board[i][j]!='_':
+        score[i][j]=0
+      else:
+
+        for i2 in [i-2,0,i+2]:
+          for j2 in [j-2,0,j+2]:
+            if i2<0 or i2>=n or j2<0 or j2>=n:
+              continue
+            if board[i2][j2]=='x':
+              score[i][j]+=m0
+
+        for i2 in [i-1,0,i+1]:
+          for j2 in [j-1,0,j+1]:
+            if i2<0 or i2>=n or j2<0 or j2>=n:
+              continue
+            if board[i2][j2]!='x': #Want room to grow
+              score[i][j]+=m1
+
+        # if i>=2:
+        #   if board[i-1][j]==board[i-2][j] and board[i-1][j]=='x':
+        #     score[i][j]-=0.1
+        # if i<=n-3:
+        #   if board[i+1][j]==board[i+2][j] and board[i+1][j]=='x':
+        #     score[i][j]-=0.1
+        # if j>=2:
+        #   if board[i][j-1]==board[i][j-2] and board[i][j-1]=='x':
+        #     score[i][j]-=0.1
+        # if j<=n-3:
+        #   if board[i][j+1]==board[i][j+2] and board[i][j+1]=='x':
+        #     score[i][j]-=0.1
+        # if i>=2 and j>=2:
+        #   if board[i-1][j-1]==board[i-2][j-2] and board[i-1][j-1]=='x':
+        #     score[i][j]-=0.1
+        # if i<=n-3 and j<=n-3:
+        #   if board[i+1][j+1]==board[i+2][j+2] and board[i+1][j+1]=='x':
+        #     score[i][j]-=0.1
+        # if i>=2 and j<=n-3:
+        #   if board[i-1][j+1]==board[i-2][j+2] and board[i-1][j+1]=='x':
+        #     score[i][j]-=0.1
+        # if i<=n-3 and j>=2:
+        #   if board[i+1][j-1]==board[i+2][j-2] and board[i+1][j-1]=='x':
+        #     score[i][j]-=0.1
+
+        # if i>=3:
+        #   if board[i-2][j]==board[i-3][j] and (board[i-1][j]=='_' or board[i-1][j]==board[i-2][j]) and board[i-2][j]=='x':
+        #     score[i][j]-=0.1
+        # if i<=n-4:
+        #   if board[i+2][j]==board[i+3][j] and (board[i+1][j]=='_' or board[i+1][j]==board[i+2][j]) and board[i+2][j]=='x':
+        #     score[i][j]-=0.1
+        # if j>=3:
+        #   if board[i][j-2]==board[i][j-3] and (board[i][j-1]=='_' or board[i][j-1]==board[i][j-2]) and board[i][j-2]=='x':
+        #     score[i][j]-=0.1
+        # if j<=n-4:
+        #   if board[i][j+2]==board[i][j+3] and (board[i][j+1]=='_' or board[i][j+1]==board[i][j+2]) and board[i][j+2]=='x':
+        #     score[i][j]-=0.1
+
+  maxscore=0
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]>maxscore:
+        maxscore=score[i][j]
+
+  choices=[]
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]==maxscore:
+        choices.append((i,j))
+
+  return random.choice(choices)
