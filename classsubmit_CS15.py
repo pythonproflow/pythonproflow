@@ -197,3 +197,37 @@ def phoenix(board,mysymbol):
 
   return random.choice(choices)
 
+
+
+def boxsu(board,mysymbol): 
+  def boxsu_init(n):
+    global boxsuXYZ
+    width=n//6
+    boxsuXYZ=[(3.0/max(abs(n/2-i-0.5)*abs(n/2-j-0.5),1),(i,j)) for i in range(n) for j in range(n) if i==width or j==width or i==n-1-width or j==n-1-width]
+    boxsuXYZ=[c[1] for c in sorted(boxsuXYZ,reverse=True)]
+    boxsuXYZ=[(i,j) for i in range(n) for j in range(n) if (i<width or i>n-1-width) and j==n//2] + [(j,i) for i in range(n) for j in range(n) if (i<width or i>n-1-width) and j==n//2] + boxsuXYZ
+
+  global boxsuXYZ
+  global boxsuXYZ_n
+
+  n=len(board)
+  try:
+    if boxsuXYZ_n!=n:
+      boxsu_init(n)
+      boxsuXYZ_n=n
+  except:
+    boxsu_init(n)
+    boxsuXYZ_n=n
+
+  #Box first
+  for i,j in boxsuXYZ:
+    if board[i][j]=='_':
+      return (i,j)
+
+  possibles=[]
+  for i in range(n):
+    for j in range(n):
+      if board[i][j]=='_':
+        possibles.append((i,j))
+
+  return random.choice(possibles)
