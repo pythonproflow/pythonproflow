@@ -63,7 +63,7 @@ def randomBot1(board,mysymbol):
       if board[i][j]=='_':
         open.append((i,j))
   return random.choice(open)
-randomBot1(board,'x')
+
 
 def firstBot1(board,mysymbol):
   n=len(board)
@@ -72,7 +72,6 @@ def firstBot1(board,mysymbol):
       if board[i][j]=='_':
         return (i,j)
   return randomBot1(board,mysymbol)
-firstBot1(board,'x')
 
 
 def lastBot1(board,mysymbol):
