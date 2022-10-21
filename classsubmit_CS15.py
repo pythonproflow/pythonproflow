@@ -52,3 +52,149 @@ def check_password(user, guess):
             return False
         time.sleep(0.00001)
     return True
+ 
+import random
+
+def randomBot1(board,mysymbol):
+  n=len(board)
+  open=[]
+  for i in range(n):
+    for j in range(n):
+      if board[i][j]=='_':
+        open.append((i,j))
+  return random.choice(open)
+randomBot1(board,'x')
+
+def firstBot1(board,mysymbol):
+  n=len(board)
+  for i in range(n):
+    for j in range(n):
+      if board[i][j]=='_':
+        return (i,j)
+  return randomBot1(board,mysymbol)
+firstBot1(board,'x')
+
+
+def lastBot1(board,mysymbol):
+  n=len(board)
+  for i in range(n-1,-1,-1):
+    for j in range(n-1,-1,-1):
+      if board[i][j]=='_':
+        return (i,j)
+  return randomBot1(board,mysymbol)
+
+def diagBot1(board,mysymbol):
+  n=len(board)
+  d1=[(i,i) for i in range(n)]
+  d2=[(i,n-i-1) for i in range(n)]
+
+  #Diagonals first
+  for i,j in d1+d2:
+    if board[i][j]=='_':
+      return (i,j)
+
+  #Then pick first
+  for i in range(n):
+    for j in range(n):
+      if board[i][j]=='_':
+        return (i,j)
+  return randomBot1(board,mysymbol)
+
+def profX(board,mysymbol): 
+  n=len(board)
+  d1=[(i,i) for i in range(n)]
+  d1=d1[n//2:]+d1[:n//2]
+  d2=[(i,n-i-1) for i in range(n)]
+  d2=d2[n//2:]+d2[:n//2]
+
+  #Diagonals first from middle
+  for i,j in d1+d2:
+    if board[i][j]=='_':
+      return (i,j)
+  #Then middle row
+  for i in [n//2]:
+    for j in range(n):
+      if board[i][j]=='_':
+        return (i,j)
+
+  #Then middle col
+  for i in range(n):
+    for j in [n//2]:
+      if board[i][j]=='_':
+        return (i,j)
+
+  #Then pick random
+  return randomBot1(board,mysymbol)
+
+def dumbledore(board,mysymbol): 
+
+  score=[[0]*n for j in range(n)]
+  for i in range(n):
+    for j in range(n):
+      score[i][j]=3.0/max(abs(n/2-i-0.5)*abs(n/2-j-0.5),1)
+      if board[i][j]!='_':
+        score[i][j]=0
+      else:
+        if i>=2:
+          if board[i-1][j]==board[i-2][j] and board[i-1][j]!='_':
+            score[i][j]+=0.1
+        if i<=n-3:
+          if board[i+1][j]==board[i+2][j] and board[i+1][j]!='_':
+            score[i][j]+=0.1
+        if j>=2:
+          if board[i][j-1]==board[i][j-2] and board[i][j-1]!='_':
+            score[i][j]+=0.1
+        if j<=n-3:
+          if board[i][j+1]==board[i][j+2] and board[i][j+1]!='_':
+            score[i][j]+=0.1
+        if i>=2 and j>=2:
+          if board[i-1][j-1]==board[i-2][j-2] and board[i-1][j-1]!='_':
+            score[i][j]+=0.1
+        if i<=n-3 and j<=n-3:
+          if board[i+1][j+1]==board[i+2][j+2] and board[i+1][j+1]!='_':
+            score[i][j]+=0.1
+        if i>=2 and j<=n-3:
+          if board[i-1][j+1]==board[i-2][j+2] and board[i-1][j+1]!='_':
+            score[i][j]+=0.1
+        if i<=n-3 and j>=2:
+          if board[i+1][j-1]==board[i+2][j-2] and board[i+1][j-1]!='_':
+            score[i][j]+=0.1
+
+
+  maxscore=0
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]>maxscore:
+        maxscore=score[i][j]
+
+  choices=[]
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]==maxscore:
+        choices.append((i,j))
+
+  return random.choice(choices)
+
+def phoenix(board,mysymbol): 
+
+  score=[[0]*n for j in range(n)]
+  for i in range(n):
+    for j in range(n):
+      score[i][j]=3.0/max(abs(n/2-i-0.5)*abs(n/2-j-0.5),1)
+      if board[i][j]!='_':
+        score[i][j]=0
+
+  maxscore=0
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]>maxscore:
+        maxscore=score[i][j]
+
+  choices=[]
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]==maxscore:
+        choices.append((i,j))
+
+  return random.choice(choices)
+
