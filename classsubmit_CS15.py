@@ -323,3 +323,759 @@ def voldemort(board,mysymbol):
         choices.append((i,j))
 
   return random.choice(choices)
+
+def prof1(board,mysymbol): 
+
+  def mybot_init(n):
+    global mybot_h
+    global mybot_v
+    global mybot_s
+
+    mybot_h=[[(i,j) for j in range(n)] for i in range(n)]
+    mybot_v=[[(i,j) for i in range(n)] for j in range(n)]
+
+    diagonal_slashs=[]
+    for j in range(2*n-1):
+      jth_slash=[]
+      for i in range(n):
+        if j-i<0:
+          break
+        if j-i>=n:
+          continue
+        jth_slash.append((i,j-i))
+      if len(jth_slash)>n*0.4:
+        diagonal_slashs.append(jth_slash)
+
+    diagonal_backslashs=[]
+    for j in range(2*n-1):
+      jth_slash=[]
+      for i2 in range(n):
+        i=n-1-i2
+        if j-i2<0:
+          break
+        if j-i2>=n:
+          continue
+        jth_slash.append((i,j-i2))
+      if len(jth_slash)>n*0.4:
+        diagonal_backslashs.append(jth_slash)
+
+    mybot_s=diagonal_slashs+diagonal_backslashs
+    
+  global mybot_boardsize
+  global mybot_focal_row
+  global mybot_focal_col
+  global mybot_row_block
+  global mybot_col_block
+  global mybot_slash_block
+  global mybot_block_inertia
+  global mybot_h
+  global mybot_v
+  global mybot_s
+
+  n=len(board)
+  try:
+    if n!=mybot_boardsize:
+      mybot_init(n)
+      mybot_boardsize=n
+  except:
+    mybot_init(n)
+    mybot_boardsize=n
+  
+  if random.random()>0.4:
+    return randomBot1(board,mysymbol)
+   
+  mybot_focal_row,mybot_focal_col,mybot_row_block,mybot_col_block,mybot_slash_block,mybot_block_inertia=[1, 1, 1, 1, 1, 0.5]
+  mybot_focal_row=max(min(mybot_focal_row,1.0),0.0)  
+  mybot_focal_col=max(min(mybot_focal_col,1.0),0.0)  
+  mybot_row_block=max(min(mybot_row_block,1.0),0.0)  
+  mybot_col_block=max(min(mybot_col_block,1.0),0.0)  
+  mybot_slash_block=max(min(mybot_slash_block,1.0),0.0)
+  mybot_block_inertia=max(min(mybot_block_inertia,1.0),0.0)  
+
+  score=[[0]*n for j in range(n)]
+  for i in range(n):
+    for j in range(n):
+      depthi=1-abs(n/2-i)/(n/2) 
+      depthj=1-abs(n/2-j)/(n/2) 
+      errori=abs(mybot_focal_row-depthi)+1
+      errorj=abs(mybot_focal_col-depthj)+1
+      score[i][j]=3.0/(errori*errorj)
+
+  # make line copy
+  #for sym in x, o
+  # fill forward m, fill backwards m, count consecutive
+  # add score by consecutive count times center of the range  times center of the line
+
+  fillsides=1
+  for block,dir in [(mybot_row_block,mybot_h),
+              (mybot_col_block,mybot_v),
+              (mybot_slash_block,mybot_s),
+              ]:
+    for line in dir:
+      cumscore=0
+      bonus=0
+
+      lst=[]
+      for idx,(i,j) in enumerate(line):
+        lst.append(board[i][j])
+      lstx=lst.copy()
+      lsty=lst.copy()
+
+      lastx=0
+      lasty=0
+      for idx in range(len(lst)):
+        c=lst[idx]
+        if lastx>0 and c=='_':
+          lstx[idx]='x'
+          lastx-=1
+        if lasty>0 and c=='_':
+          lsty[idx]='o'
+          lasty-=1
+        if c=='x':  
+          lastx=fillsides
+          lasty=0
+        elif c=='o':
+          lasty=fillsides
+          lastx=0
+
+      lastx=0
+      lasty=0
+      for idx in range(len(lst)-1,-1,-1):
+        c=lst[idx]
+        if lastx>0 and c=='_':
+          lstx[idx]='x'
+          lastx-=1
+        if lasty>0 and c=='_':
+          lsty[idx]='o'
+          lasty-=1
+        if c=='x':  
+          lastx=fillsides
+          lasty=0
+        elif c=='o':
+          lasty=fillsides
+          lastx=0
+
+      idx=0
+      while idx<len(lst):
+        if lstx[idx]=='x':
+          count=0
+          start=idx
+          while idx<len(lst) and lstx[idx]=='x':
+            count+=1
+            idx+=1
+          for idx2 in range(start,idx):
+            lstx[idx2]=count
+        else:
+          lstx[idx]=0
+          idx+=1
+
+      idx=0
+      while idx<len(lst):
+        if lsty[idx]=='o':
+          count=0
+          start=idx
+          while idx<len(lst) and lsty[idx]=='o':
+            count+=1
+            idx+=1
+          for idx2 in range(start,idx):
+            lsty[idx2]=count
+        else:
+          lsty[idx]=0
+          idx+=1
+          
+      # print(lst)
+      # print(lstx)
+      # print(lsty)
+      # print()
+      m=len(line)/2
+      for idx,(i,j) in enumerate(line):
+        if lstx[idx]>mybot_block_inertia*n:
+          score[i][j]+=lstx[idx]*0.9**(abs(idx-m))*block
+        if lsty[idx]>mybot_block_inertia*n:
+          score[i][j]+=lsty[idx]*0.9**(abs(idx-m))*block
+
+  for i in range(n):
+    for j in range(n):
+      if board[i][j]!='_':
+        score[i][j]=0
+
+  maxscore=0
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]>maxscore:
+        maxscore=score[i][j]
+
+  choices=[]
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]==maxscore:
+        choices.append((i,j))
+
+  return random.choice(choices)
+
+
+def prof2(board,mysymbol): 
+
+  def mybot_init(n):
+    global mybot_h
+    global mybot_v
+    global mybot_s
+
+    mybot_h=[[(i,j) for j in range(n)] for i in range(n)]
+    mybot_v=[[(i,j) for i in range(n)] for j in range(n)]
+
+    diagonal_slashs=[]
+    for j in range(2*n-1):
+      jth_slash=[]
+      for i in range(n):
+        if j-i<0:
+          break
+        if j-i>=n:
+          continue
+        jth_slash.append((i,j-i))
+      if len(jth_slash)>n*0.4:
+        diagonal_slashs.append(jth_slash)
+
+    diagonal_backslashs=[]
+    for j in range(2*n-1):
+      jth_slash=[]
+      for i2 in range(n):
+        i=n-1-i2
+        if j-i2<0:
+          break
+        if j-i2>=n:
+          continue
+        jth_slash.append((i,j-i2))
+      if len(jth_slash)>n*0.4:
+        diagonal_backslashs.append(jth_slash)
+
+    mybot_s=diagonal_slashs+diagonal_backslashs
+    
+  global mybot_boardsize
+  global mybot_focal_row
+  global mybot_focal_col
+  global mybot_row_block
+  global mybot_col_block
+  global mybot_slash_block
+  global mybot_block_inertia
+  global mybot_h
+  global mybot_v
+  global mybot_s
+
+  n=len(board)
+  try:
+    if n!=mybot_boardsize:
+      mybot_init(n)
+      mybot_boardsize=n
+  except:
+    mybot_init(n)
+    mybot_boardsize=n
+  
+  if random.random()>0.6:
+    return randomBot1(board,mysymbol)
+   
+  mybot_focal_row,mybot_focal_col,mybot_row_block,mybot_col_block,mybot_slash_block,mybot_block_inertia=[1, 1, 1, 1, 1, 0.5]
+  mybot_focal_row=max(min(mybot_focal_row,1.0),0.0)  
+  mybot_focal_col=max(min(mybot_focal_col,1.0),0.0)  
+  mybot_row_block=max(min(mybot_row_block,1.0),0.0)  
+  mybot_col_block=max(min(mybot_col_block,1.0),0.0)  
+  mybot_slash_block=max(min(mybot_slash_block,1.0),0.0)
+  mybot_block_inertia=max(min(mybot_block_inertia,1.0),0.0)  
+
+  score=[[0]*n for j in range(n)]
+  for i in range(n):
+    for j in range(n):
+      depthi=1-abs(n/2-i)/(n/2) 
+      depthj=1-abs(n/2-j)/(n/2) 
+      errori=abs(mybot_focal_row-depthi)+1
+      errorj=abs(mybot_focal_col-depthj)+1
+      score[i][j]=3.0/(errori*errorj)
+
+  # make line copy
+  #for sym in x, o
+  # fill forward m, fill backwards m, count consecutive
+  # add score by consecutive count times center of the range  times center of the line
+
+  fillsides=1
+  for block,dir in [(mybot_row_block,mybot_h),
+              (mybot_col_block,mybot_v),
+              (mybot_slash_block,mybot_s),
+              ]:
+    for line in dir:
+      cumscore=0
+      bonus=0
+
+      lst=[]
+      for idx,(i,j) in enumerate(line):
+        lst.append(board[i][j])
+      lstx=lst.copy()
+      lsty=lst.copy()
+
+      lastx=0
+      lasty=0
+      for idx in range(len(lst)):
+        c=lst[idx]
+        if lastx>0 and c=='_':
+          lstx[idx]='x'
+          lastx-=1
+        if lasty>0 and c=='_':
+          lsty[idx]='o'
+          lasty-=1
+        if c=='x':  
+          lastx=fillsides
+          lasty=0
+        elif c=='o':
+          lasty=fillsides
+          lastx=0
+
+      lastx=0
+      lasty=0
+      for idx in range(len(lst)-1,-1,-1):
+        c=lst[idx]
+        if lastx>0 and c=='_':
+          lstx[idx]='x'
+          lastx-=1
+        if lasty>0 and c=='_':
+          lsty[idx]='o'
+          lasty-=1
+        if c=='x':  
+          lastx=fillsides
+          lasty=0
+        elif c=='o':
+          lasty=fillsides
+          lastx=0
+
+      idx=0
+      while idx<len(lst):
+        if lstx[idx]=='x':
+          count=0
+          start=idx
+          while idx<len(lst) and lstx[idx]=='x':
+            count+=1
+            idx+=1
+          for idx2 in range(start,idx):
+            lstx[idx2]=count
+        else:
+          lstx[idx]=0
+          idx+=1
+
+      idx=0
+      while idx<len(lst):
+        if lsty[idx]=='o':
+          count=0
+          start=idx
+          while idx<len(lst) and lsty[idx]=='o':
+            count+=1
+            idx+=1
+          for idx2 in range(start,idx):
+            lsty[idx2]=count
+        else:
+          lsty[idx]=0
+          idx+=1
+          
+      # print(lst)
+      # print(lstx)
+      # print(lsty)
+      # print()
+      m=len(line)/2
+      for idx,(i,j) in enumerate(line):
+        if lstx[idx]>mybot_block_inertia*n:
+          score[i][j]+=lstx[idx]*0.9**(abs(idx-m))*block
+        if lsty[idx]>mybot_block_inertia*n:
+          score[i][j]+=lsty[idx]*0.9**(abs(idx-m))*block
+
+  for i in range(n):
+    for j in range(n):
+      if board[i][j]!='_':
+        score[i][j]=0
+
+  maxscore=0
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]>maxscore:
+        maxscore=score[i][j]
+
+  choices=[]
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]==maxscore:
+        choices.append((i,j))
+
+  return random.choice(choices)
+
+def prof3(board,mysymbol): 
+
+  def mybot_init(n):
+    global mybot_h
+    global mybot_v
+    global mybot_s
+
+    mybot_h=[[(i,j) for j in range(n)] for i in range(n)]
+    mybot_v=[[(i,j) for i in range(n)] for j in range(n)]
+
+    diagonal_slashs=[]
+    for j in range(2*n-1):
+      jth_slash=[]
+      for i in range(n):
+        if j-i<0:
+          break
+        if j-i>=n:
+          continue
+        jth_slash.append((i,j-i))
+      if len(jth_slash)>n*0.4:
+        diagonal_slashs.append(jth_slash)
+
+    diagonal_backslashs=[]
+    for j in range(2*n-1):
+      jth_slash=[]
+      for i2 in range(n):
+        i=n-1-i2
+        if j-i2<0:
+          break
+        if j-i2>=n:
+          continue
+        jth_slash.append((i,j-i2))
+      if len(jth_slash)>n*0.4:
+        diagonal_backslashs.append(jth_slash)
+
+    mybot_s=diagonal_slashs+diagonal_backslashs
+    
+  global mybot_boardsize
+  global mybot_focal_row
+  global mybot_focal_col
+  global mybot_row_block
+  global mybot_col_block
+  global mybot_slash_block
+  global mybot_block_inertia
+  global mybot_h
+  global mybot_v
+  global mybot_s
+
+  n=len(board)
+  try:
+    if n!=mybot_boardsize:
+      mybot_init(n)
+      mybot_boardsize=n
+  except:
+    mybot_init(n)
+    mybot_boardsize=n
+  
+  if random.random()>0.8:
+    return randomBot1(board,mysymbol)
+   
+  mybot_focal_row,mybot_focal_col,mybot_row_block,mybot_col_block,mybot_slash_block,mybot_block_inertia=[1, 1, 1, 1, 1, 0.5]
+  mybot_focal_row=max(min(mybot_focal_row,1.0),0.0)  
+  mybot_focal_col=max(min(mybot_focal_col,1.0),0.0)  
+  mybot_row_block=max(min(mybot_row_block,1.0),0.0)  
+  mybot_col_block=max(min(mybot_col_block,1.0),0.0)  
+  mybot_slash_block=max(min(mybot_slash_block,1.0),0.0)
+  mybot_block_inertia=max(min(mybot_block_inertia,1.0),0.0)  
+
+  score=[[0]*n for j in range(n)]
+  for i in range(n):
+    for j in range(n):
+      depthi=1-abs(n/2-i)/(n/2) 
+      depthj=1-abs(n/2-j)/(n/2) 
+      errori=abs(mybot_focal_row-depthi)+1
+      errorj=abs(mybot_focal_col-depthj)+1
+      score[i][j]=3.0/(errori*errorj)
+
+  # make line copy
+  #for sym in x, o
+  # fill forward m, fill backwards m, count consecutive
+  # add score by consecutive count times center of the range  times center of the line
+
+  fillsides=1
+  for block,dir in [(mybot_row_block,mybot_h),
+              (mybot_col_block,mybot_v),
+              (mybot_slash_block,mybot_s),
+              ]:
+    for line in dir:
+      cumscore=0
+      bonus=0
+
+      lst=[]
+      for idx,(i,j) in enumerate(line):
+        lst.append(board[i][j])
+      lstx=lst.copy()
+      lsty=lst.copy()
+
+      lastx=0
+      lasty=0
+      for idx in range(len(lst)):
+        c=lst[idx]
+        if lastx>0 and c=='_':
+          lstx[idx]='x'
+          lastx-=1
+        if lasty>0 and c=='_':
+          lsty[idx]='o'
+          lasty-=1
+        if c=='x':  
+          lastx=fillsides
+          lasty=0
+        elif c=='o':
+          lasty=fillsides
+          lastx=0
+
+      lastx=0
+      lasty=0
+      for idx in range(len(lst)-1,-1,-1):
+        c=lst[idx]
+        if lastx>0 and c=='_':
+          lstx[idx]='x'
+          lastx-=1
+        if lasty>0 and c=='_':
+          lsty[idx]='o'
+          lasty-=1
+        if c=='x':  
+          lastx=fillsides
+          lasty=0
+        elif c=='o':
+          lasty=fillsides
+          lastx=0
+
+      idx=0
+      while idx<len(lst):
+        if lstx[idx]=='x':
+          count=0
+          start=idx
+          while idx<len(lst) and lstx[idx]=='x':
+            count+=1
+            idx+=1
+          for idx2 in range(start,idx):
+            lstx[idx2]=count
+        else:
+          lstx[idx]=0
+          idx+=1
+
+      idx=0
+      while idx<len(lst):
+        if lsty[idx]=='o':
+          count=0
+          start=idx
+          while idx<len(lst) and lsty[idx]=='o':
+            count+=1
+            idx+=1
+          for idx2 in range(start,idx):
+            lsty[idx2]=count
+        else:
+          lsty[idx]=0
+          idx+=1
+          
+      # print(lst)
+      # print(lstx)
+      # print(lsty)
+      # print()
+      m=len(line)/2
+      for idx,(i,j) in enumerate(line):
+        if lstx[idx]>mybot_block_inertia*n:
+          score[i][j]+=lstx[idx]*0.9**(abs(idx-m))*block
+        if lsty[idx]>mybot_block_inertia*n:
+          score[i][j]+=lsty[idx]*0.9**(abs(idx-m))*block
+
+  for i in range(n):
+    for j in range(n):
+      if board[i][j]!='_':
+        score[i][j]=0
+
+  maxscore=0
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]>maxscore:
+        maxscore=score[i][j]
+
+  choices=[]
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]==maxscore:
+        choices.append((i,j))
+
+  return random.choice(choices)
+
+def prof4(board,mysymbol): 
+
+  def mybot_init(n):
+    global mybot_h
+    global mybot_v
+    global mybot_s
+
+    mybot_h=[[(i,j) for j in range(n)] for i in range(n)]
+    mybot_v=[[(i,j) for i in range(n)] for j in range(n)]
+
+    diagonal_slashs=[]
+    for j in range(2*n-1):
+      jth_slash=[]
+      for i in range(n):
+        if j-i<0:
+          break
+        if j-i>=n:
+          continue
+        jth_slash.append((i,j-i))
+      if len(jth_slash)>n*0.4:
+        diagonal_slashs.append(jth_slash)
+
+    diagonal_backslashs=[]
+    for j in range(2*n-1):
+      jth_slash=[]
+      for i2 in range(n):
+        i=n-1-i2
+        if j-i2<0:
+          break
+        if j-i2>=n:
+          continue
+        jth_slash.append((i,j-i2))
+      if len(jth_slash)>n*0.4:
+        diagonal_backslashs.append(jth_slash)
+
+    mybot_s=diagonal_slashs+diagonal_backslashs
+    
+  global mybot_boardsize
+  global mybot_focal_row
+  global mybot_focal_col
+  global mybot_row_block
+  global mybot_col_block
+  global mybot_slash_block
+  global mybot_block_inertia
+  global mybot_h
+  global mybot_v
+  global mybot_s
+
+  n=len(board)
+  try:
+    if n!=mybot_boardsize:
+      mybot_init(n)
+      mybot_boardsize=n
+  except:
+    mybot_init(n)
+    mybot_boardsize=n
+  
+  
+  mybot_focal_row,mybot_focal_col,mybot_row_block,mybot_col_block,mybot_slash_block,mybot_block_inertia=[1, 1, 1, 1, 1, 0.5]
+  mybot_focal_row=max(min(mybot_focal_row,1.0),0.0)  
+  mybot_focal_col=max(min(mybot_focal_col,1.0),0.0)  
+  mybot_row_block=max(min(mybot_row_block,1.0),0.0)  
+  mybot_col_block=max(min(mybot_col_block,1.0),0.0)  
+  mybot_slash_block=max(min(mybot_slash_block,1.0),0.0)
+  mybot_block_inertia=max(min(mybot_block_inertia,1.0),0.0)  
+
+  score=[[0]*n for j in range(n)]
+  for i in range(n):
+    for j in range(n):
+      depthi=1-abs(n/2-i)/(n/2) 
+      depthj=1-abs(n/2-j)/(n/2) 
+      errori=abs(mybot_focal_row-depthi)+1
+      errorj=abs(mybot_focal_col-depthj)+1
+      score[i][j]=3.0/(errori*errorj)
+
+  # make line copy
+  #for sym in x, o
+  # fill forward m, fill backwards m, count consecutive
+  # add score by consecutive count times center of the range  times center of the line
+
+  fillsides=1
+  for block,dir in [(mybot_row_block,mybot_h),
+              (mybot_col_block,mybot_v),
+              (mybot_slash_block,mybot_s),
+              ]:
+    for line in dir:
+      cumscore=0
+      bonus=0
+
+      lst=[]
+      for idx,(i,j) in enumerate(line):
+        lst.append(board[i][j])
+      lstx=lst.copy()
+      lsty=lst.copy()
+
+      lastx=0
+      lasty=0
+      for idx in range(len(lst)):
+        c=lst[idx]
+        if lastx>0 and c=='_':
+          lstx[idx]='x'
+          lastx-=1
+        if lasty>0 and c=='_':
+          lsty[idx]='o'
+          lasty-=1
+        if c=='x':  
+          lastx=fillsides
+          lasty=0
+        elif c=='o':
+          lasty=fillsides
+          lastx=0
+
+      lastx=0
+      lasty=0
+      for idx in range(len(lst)-1,-1,-1):
+        c=lst[idx]
+        if lastx>0 and c=='_':
+          lstx[idx]='x'
+          lastx-=1
+        if lasty>0 and c=='_':
+          lsty[idx]='o'
+          lasty-=1
+        if c=='x':  
+          lastx=fillsides
+          lasty=0
+        elif c=='o':
+          lasty=fillsides
+          lastx=0
+
+      idx=0
+      while idx<len(lst):
+        if lstx[idx]=='x':
+          count=0
+          start=idx
+          while idx<len(lst) and lstx[idx]=='x':
+            count+=1
+            idx+=1
+          for idx2 in range(start,idx):
+            lstx[idx2]=count
+        else:
+          lstx[idx]=0
+          idx+=1
+
+      idx=0
+      while idx<len(lst):
+        if lsty[idx]=='o':
+          count=0
+          start=idx
+          while idx<len(lst) and lsty[idx]=='o':
+            count+=1
+            idx+=1
+          for idx2 in range(start,idx):
+            lsty[idx2]=count
+        else:
+          lsty[idx]=0
+          idx+=1
+          
+      # print(lst)
+      # print(lstx)
+      # print(lsty)
+      # print()
+      m=len(line)/2
+      for idx,(i,j) in enumerate(line):
+        if lstx[idx]>mybot_block_inertia*n:
+          score[i][j]+=lstx[idx]*0.9**(abs(idx-m))*block
+        if lsty[idx]>mybot_block_inertia*n:
+          score[i][j]+=lsty[idx]*0.9**(abs(idx-m))*block
+
+  for i in range(n):
+    for j in range(n):
+      if board[i][j]!='_':
+        score[i][j]=0
+
+  maxscore=0
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]>maxscore:
+        maxscore=score[i][j]
+
+  choices=[]
+  for i in range(n):
+    for j in range(n):
+      if score[i][j]==maxscore:
+        choices.append((i,j))
+
+  return random.choice(choices)
+
